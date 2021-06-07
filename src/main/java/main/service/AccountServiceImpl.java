@@ -2,6 +2,7 @@ package main.service;
 
 import main.api.dto.AccountDTO;
 import main.api.request.NewAccountRequest;
+import main.api.request.TransferRequest;
 import main.exception.AccountNotFoundException;
 import main.exception.CurrencyNotTheSameException;
 import main.exception.NotEnoughMoneyException;
@@ -10,6 +11,8 @@ import main.model.Account;
 import main.repo.AccountRepository;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,12 +30,14 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AccountDTO> getAllAccounts() {
         List<Account> accounts = accountRepository.findAll();
         return getAccountDTOList(accounts);
     }
 
     @Override
+    @Transactional
     public void createNewAccount(NewAccountRequest request) {
         Currency currency = Currency.getInstance(request.getCurrency());
 
@@ -47,17 +52,18 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void transfer(String fromAccNumber, String toAccNumber, String stringAmount) {
-        if (fromAccNumber.equals(toAccNumber)) {
-            throw new SameAccountsException("It's the same account");
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public void transfer(TransferRequest request) {
+        if (request.getFromAccNumber().equals(request.getToAccNumber())) {
+            throw new SameAccountsException("It's the same accounts");
         }
 
-        Account fromAcc = accountRepository.findByAccountNumber(fromAccNumber)
+        Account fromAcc = accountRepository.findByAccountNumber(request.getFromAccNumber())
                 .orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        Account toAcc = accountRepository.findByAccountNumber(toAccNumber)
+        Account toAcc = accountRepository.findByAccountNumber(request.getToAccNumber())
                 .orElseThrow(() -> new AccountNotFoundException("Account not found"));
 
-        String correctStringAmount = stringAmount.replaceAll(",", ".");
+        String correctStringAmount = request.getAmount().replaceAll(",", ".");
         double amount = Double.parseDouble(correctStringAmount);
 
         if (!fromAcc.getCurrency().equals(toAcc.getCurrency())) {
@@ -71,9 +77,6 @@ public class AccountServiceImpl implements AccountService {
 
         fromAcc.setBalance(getRoundedAmount(currency, fromAcc.getBalance() - amount));
         toAcc.setBalance(getRoundedAmount(currency, toAcc.getBalance() + amount));
-//        accountRepository.saveAndFlush(fromAcc);
-//        accountRepository.saveAndFlush(toAcc);
-        //В одной транзакции должны выполниться
         accountRepository.saveAll(List.of(fromAcc, toAcc));
     }
 
@@ -90,9 +93,10 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<String> getListOfAccNumbers() {
         return accountRepository.findAll().stream()
-                .map(Account::getAccountNumber)
+                .map(a -> a.getAccountNumber() + " = " + a.getBalance() + " " + a.getCurrency())
                 .collect(Collectors.toList());
     }
 

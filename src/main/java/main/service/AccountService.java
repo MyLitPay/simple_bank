@@ -2,14 +2,14 @@ package main.service;
 
 import main.api.dto.AccountDTO;
 import main.api.request.NewAccountRequest;
+import main.api.request.TransferRequest;
 
 import java.util.List;
-import java.util.Set;
 
 public interface AccountService {
     List<AccountDTO> getAllAccounts();
     void createNewAccount(NewAccountRequest request);
-    void transfer(String fromAccNumber, String toAccNumber, String amount);
+    void transfer(TransferRequest request);
     List<String> getListOfCurrency();
     List<String> getListOfAccNumbers();
 }

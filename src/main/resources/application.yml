@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    hibernate.ddl-auto: validate
+    show-sql: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bank
+    username: postgres
+    password: 123

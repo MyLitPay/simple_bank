@@ -1,20 +1,17 @@
 package main.controller;
 
-import main.api.dto.AccountDTO;
 import main.api.request.NewAccountRequest;
+import main.api.request.TransferRequest;
 import main.service.AccountService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Set;
-
 @Controller
-public class DefaultController {
+public class AccountController {
     final AccountService accountService;
 
-    public DefaultController(AccountService accountService) {
+    public AccountController(AccountService accountService) {
         this.accountService = accountService;
     }
 
@@ -46,10 +43,8 @@ public class DefaultController {
         return "transfer";
     }
 
-    @PutMapping("/transfer")
-    public void transfer(@RequestParam String fromAccNumber,
-                         @RequestParam String toAccNumber,
-                         @RequestParam String amount) {
-        accountService.transfer(fromAccNumber, toAccNumber, amount);
+    @PostMapping("/transfer")
+    public void transfer(@RequestBody TransferRequest request) {
+        accountService.transfer(request);
     }
 }

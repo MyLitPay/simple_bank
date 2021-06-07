@@ -1,134 +1,69 @@
-
-//$(function() {
-//    getPosts();
-//});
-
-//$('#show_all').click(() => {
-//    $.ajax({
-//            method: 'get',
-//            url: '/api/acc/all',
-//            success: () => {
-//                $('#post_text').val('');
-//                getPosts();
-//
-//            }
-//        })
-//
-//
-//    const newCase = {
-//        name: $('#post_text').val()
-//    }
-
-//    if ($('#post_text').val() === '') {
-//        alert('Type name of the case')
-//    } else {
-//        $.ajax({
-//            method: 'post',
-//            url: '/api/cases',
-//            contentType: 'application/json',
-//            data: JSON.stringify(newCase),
-//            success: () => {
-//                $('#post_text').val('');
-//                getPosts();
-//
-//            }
-//        })
-//    }
-//});
-
-//function getList() {
-//    $.ajax({
-//        method: 'get',
-//        url: '/api/acc/all'
-//        })
-//}
 function newAcc() {
-let bal = $('#amount').val();
+    let bal = $('#amount').val();
 
-if (isNaN(parseFloat(bal))) {
-alert(bal + ' is not a number')
-}
-
-const acc = {
-        balance: bal,
-        currency: $('#currency').val()
+    if (incorrectAmount(bal)) {
+        return;
     }
-$.ajax({
-            method: 'post',
-            url: '/new',
-            contentType: 'application/json',
-            data: JSON.stringify(acc),
-            success: () => {
-                $('#amount').val('');
-            }
-        })
+
+    const acc = {
+            balance: bal,
+            currency: $('#currency').val()
+        }
+
+    $.ajax({
+                method: 'post',
+                url: '/new',
+                contentType: 'application/json',
+                data: JSON.stringify(acc),
+                success: () => {
+                    $('#amount').val('');
+                    window.location.href = '/';
+                }
+            })
 }
 
+function transfer() {
+    const am = $('#trans-amount').val();
 
-//function getList() {
+    if (incorrectAmount(am)) {
+        return;
+    }
 
-//$('.btn').click(() => {
-//    $.ajax({
-//        method: 'get',
-//        url: '/default/all'
-//        success: (data) => {
+    const transaction = {
+        fromAccNumber: $('#number-from').val().substring(0, 20),
+        toAccNumber: $('#number-to').val().substring(0, 20),
+        amount: $('#trans-amount').val()
+    }
 
-//            if (data.length != 0) {
-//                $('.no-cases').css({'display': 'none'});
-//            } else {
-//                $('.no-cases').css({'display': 'block'});
-//            }
+    $.ajax({
+                method: 'post',
+                url: '/transfer',
+                contentType: 'application/json',
+                data: JSON.stringify(transaction),
+                success: () => {
+                    $('#trans-amount').val('');
+                    window.location.href = '/';
+                },
+                error: (e) => {
+                    $('.con_alrt').append('<div class="alert alert-danger alert-dismissible fade show mt-4" role="alert">' + e.responseText + '</div>');
+                    const alrt = $('.alert');
 
-//            $('.card_wrapper').remove();
+                    setTimeout(function(){
+                        alrt.remove();
+                    }, 4000);
+                }
+            })
+}
 
-//            $.ajax({
-//                method: 'get',
-//                url: '/default/all'
-//            });
+function incorrectAmount(am) {
+    if (am == '' || am == '0' || isNaN(parseFloat(am))) {
+            $('.con_alrt').append('<div class="alert alert-danger alert-dismissible fade show" role="alert">Incorrect amount</div>');
+            const alrt = $('.alert');
 
-//            for (acc of data) {
-////                const id = case1.id;
-////                const name = case1.name;
-//                const accountNumber = acc.accountNumber;
-//                const balance = acc.balance;
-//                const currency = acc.currency;
-//
-//                console.log(accountNumber);
-//                console.log(balance);
-//                console.log(currency);
-
-//                const div = $('<div/>', {
-//                    id: id,
-//                    class:  'card_wrapper',
-//                });
-//                $('#button_delete').after(div);
-//
-//                const h2 = $('<h2/>', {
-//                    id: 'nam' + id,
-//                    text: name
-//                })
-//
-//                const div2 = $('<div/>', {
-//                    id: 'but_wrap' + id,
-//                    class: 'buttons_wrapper'
-//                })
-//                div.append(h2);
-//                div.append(div2);
-//
-//                const a1 = $('<a/>', {
-//                    id: 'button_update' + id,
-//                    class: 'button button_update',
-//                    text: 'Edit'
-//                })
-//
-//                const a2 = $('<a/>', {
-//                    id: 'button_delete_one' + id,
-//                    class: 'button button_delete',
-//                    text: 'Delete'
-//                })
-//                div2.append(a1);
-//                div2.append(a2);
-//            }
-//        }
-//    })
-//}
+            setTimeout(function(){
+                alrt.remove();
+            }, 4000);
+            return true;
+        }
+    return false;
+}
